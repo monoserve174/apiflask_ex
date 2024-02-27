@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "apiflask-ex"
+version = "0.1.0"
+description = ""
+authors = ["Kevin Cheng <monoserve174@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+apiflask = "2.1.0"
+python-dotenv = "1.0.1"
+flask-cors = "4.0.0"
+flask-jwt-extended = "4.6.0"
+pytz = "2024.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
