@@ -18,7 +18,7 @@ app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(hours=20)
 
 # 改另寫 extends 處理
 # 設定跨域 CORS，可改成讀取設定檔 Frontend 的網址
-CORS(app, resources={r"/*": {"origins": ["http://localhost:4200"]}})
+CORS(app, resources={r"/*": {"origins": ["http://localhost:4200", "http://127.0.0.1:4200"]}})
 # 初始化 JWT
 auth_token = JWTManager(app)
 # 初始化 HTTPBasicAuth
@@ -55,12 +55,15 @@ def index():
     return {'message': 'Hello, APIFlask!'}
 
 
-class LoginAPI(MethodView):
+class TokenApi(MethodView):
     # 通用裝飾器
     # decorators = [auth_basic.login_required]
 
     @auth_basic.login_required
     def get(self):
+        """
+        使用 HTTP Basic 驗證取得 Token
+        """
         access_token = create_access_token(identity=g.user)
         refresh_token = create_refresh_token(identity=g.user)
         return {
@@ -71,7 +74,7 @@ class LoginAPI(MethodView):
     @app.input(LoginInSchema, location='json')
     def post(self, **kwargs):
         """
-        登入取得 Token
+        使用 HTTP Post 驗證取得 Token
         :param kwargs:
         :return:
         """
@@ -91,18 +94,17 @@ class LoginAPI(MethodView):
         }
 
 
+    @jwt_required(refresh=True)
+    def put(self, **kwargs):
+        """
+        更新 Access Token
+        """
+        current_user = get_jwt_identity()
+        access_token = create_access_token(identity=current_user)
+        raw_token = request.headers['Authorization'].split(' ')[1]
+        return {'access_token': access_token, 'refresh_token': raw_token}
+
+
 # 將 ClassView 綁到 url
-app.add_url_rule('/apis/login', view_func=LoginAPI.as_view('login_api'))
+app.add_url_rule('/apis/auth/token', view_func=TokenApi.as_view('token_api'))
 
-
-# 更新 Token
-@app.get('/apis/update-token')
-@jwt_required(refresh=True)
-def update_token():
-    """
-    更新 Token
-    """
-    current_user = get_jwt_identity()
-    access_token = create_access_token(identity=current_user)
-    raw_token = request.headers['Authorization'].split(' ')[1]
-    return {'access_token': access_token, 'refresh_token': raw_token}
